@@ -49,6 +49,6 @@
 > 7. Any modification applied to the system is your decision. Think before you act.
 
 > Download 📦:
-> - [Download now APO.](https://shrinkme.click/6yGaNvCl)
+> - [Download now APO.](https://shrinkme.click/lM80Gn)
 > - [For Magisk Modules or other Plugins, please visit here.](https://t.me/Demoniica)
 ----
