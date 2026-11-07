@@ -7,27 +7,37 @@
 
 > [!IMPORTANT]
 > Features ✨:
-> 1. Dynamic ZRAM optimization across all available ZRAM devices with RAM-based sizing and lz4 compression.
-> 2. Real-time memory daemon that monitors RAM usage and manages background apps automatically.
-> 3. System and Google app background restrictions via `appops` to reduce RAM and battery drain.
-> 4. Window Manager logging and logcat disabled to minimize I/O and CPU overhead.
-> 5. Smart storage trimming across all partitions using `sm fstrim` and `fstrim`.
-> 6. Touch responsiveness optimization with reduced multi-press and long-press timeouts.
-> 7. Automatic GPU driver selection (`Game Driver`, `Updatable Driver`) and ANGLE support per game — applied only if Game Driver is available on the device.
-> 8. Refresh rate locked to device maximum for smoother display output.
-> 9. Auto-detected renderer configuration (Skia Vulkan / Skia GL) based on hardware support with libvulkan fallback detection.
-> 10. Full APK and native library preload to RAM for faster app launch.
-> 11. Game mode activation with OEM-specific performance settings (MIUI, ColorOS, XOS, MagicOS).
-> 12. Comprehensive system tracing and logging disabled including kernel tracing, atrace, and service logs.
-> 13. DEX compilation with `speed` mode for games and `speed-profile` for other apps.
-> 14. Android Game Mode configured per app with auto-detected downscale and loading boost — Android 12 and above only.
-> 15. Activity Manager tuned for gaming — reduced cached processes, GC interval, and OOM behavior.
-> 16. Dynamic game boost daemon that switches between performance and idle mode based on foreground app.
-> 17. System junk cleanup including art profiles, usage stats, blob store, and thumbnail removal.
-> 18. Aggressive GMS optimization with doze tuning, appops restrictions, and network policy control.
+> 1. Faster swap performance with dynamic RAM-based ZRAM sizing.
+> 2. Real-time RAM monitoring that automatically manages background apps to keep the device responsive.
+> 3. Reduced RAM and battery drain by restricting unnecessary system and Google app background activity.
+> 4. Lower I/O and CPU overhead by disabling internal system logging.
+> 5. Faster and healthier storage over time through periodic TRIM.
+> 6. Snappier touch response with reduced input timeouts.
+> 7. Better GPU performance per game through automatic driver selection.
+> 8. Smoother visuals with the display locked to its maximum refresh rate.
+> 9. Optimal rendering performance based on the device's actual GPU capability.
+> 10. Faster launch times for your most-used apps by smartly preloading them into RAM.
+> 11. Maximum performance mode activated automatically per device brand.
+> 12. Reduced background overhead by disabling internal system tracing.
+> 13. Faster app startup through ahead-of-time code compilation.
+> 14. Smoother gameplay via Android's built-in per-app Game Mode.
+> 15. More RAM freed up for games by tuning how the system manages background processes.
+> 16. Automatic performance boost while gaming, with power saving when idle.
+> 17. Cleaner system with less junk, improving speed and storage over time.
+> 18. Reduced background drain from Google services without breaking core functionality.
+> 19. Smoother, less janky UI rendering by prioritizing the display compositor.
+> 20. Lower network latency for a more responsive online gaming experience.
+> 21. Better memory management for smoother multitasking, scaled to the device's total RAM.
+> 22. Fixed missed call and message notifications by restoring full-screen intent permission where it was silently blocked.
+> 23. Snappier UI with faster window and app transitions.
+> 24. Uninterrupted background connection for games while multitasking or with the screen off.
+> 25. More vivid, saturated colors for a richer visual experience.
+> 26. Faster, more responsive system UI.
+> 27. Smoother file transfers to and from an external SD card.
+> 28. Smoother screen rendering and more responsive typing by prioritizing the core graphics and keyboard processes.
 
 > [!TIP]
-> 1. Supports `Magisk` `KernelSU` `KernelSU Next` `APatch` `SukiSU` and their variants.
+> 1. Supports `APatch` `KernelSU` `Magisk` and their forks.
 > 2. Minimum Android `10 SDK 29`.
 
 > [!WARNING]
