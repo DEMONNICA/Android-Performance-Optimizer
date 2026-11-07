@@ -2,6 +2,47 @@
 > - All significant changes to this project will be documented in this file.
 ---
 
+> [10.0.0]
+>
+> - Added `tune_surfaceflinger` — pins SurfaceFlinger to maximum CPU/IO priority (renice -20, SCHED_FIFO 99, ionice realtime), OOM-kill protection, and the `top-app` cgroup; also sets SurfaceFlinger properties for context priority, phase offsets, and HWC-forced composition.
+> - Added `tune_network` — TCP tuning (reordering tolerance, low latency mode, fast open, no slow-start after idle, reduced notsent buffer), lower `txqueuelen` across network interfaces, WiFi forced low-latency mode, disabled scan throttling, and disabled WiFi power saving.
+> - Added `tune_vm` — kernel memory management tuning (`vfs_cache_pressure`, `dirty_ratio`, `dirty_background_ratio`) with a dynamic `min_free_kbytes` scaled to 1% of total RAM (minimum 64MB); skipped entirely on devices with less than 4GB RAM.
+> - Added `fix_full_screen_intent` — scans all installed apps and re-enables `USE_FULL_SCREEN_INTENT` for any app where it was silently rejected, fixing missed call/VoIP notifications (found affecting WhatsApp and the default Dialer app).
+> - Added `speed_up_animations` — sets window, transition, and animator duration scale to 0.5x for a snappier UI.
+> - Added `whitelist_games` — adds every installed game from `GAME_LIST` to the doze whitelist so background connections and sync aren't interrupted by battery restrictions.
+> - Added `boost_saturation` — increases display color saturation to 1.3x via SurfaceFlinger for more vivid visuals.
+> - Added `compile_system_ui` — AOT-compiles `com.android.systemui` and the `android` framework package in `speed --full` mode for a more responsive system UI.
+> - Added `tune_sdcard_readahead` — dynamically detects any mounted external SD card and raises its block device read-ahead to 2MB for smoother large file transfers.
+> - Added `boost_graphics_services` — raises CPU/IO priority and `top-app` cgroup placement for the core graphics pipeline (GPU service, SurfaceFlinger, display composer, display allocator) and the active keyboard app, for smoother rendering without introducing input lag.
+> - Added support for Aster (`me.yuki.aster`), FolkSU (`me.yuki.folksu`), and FinaSU (`me.yuki.fina`), all APatch forks, and BakaSU, a KernelSU fork sharing its package ID with ReSukiSU and distinguished automatically, to `detect_root_all` in `customize.sh`.
+> - Changed `game_mode` — added `cmd power set-fixed-performance-mode-enabled` to request maximum performance through the Power HAL on devices that support it; also added `POWER_SAVE_PRE_HIDE_MODE` and `touch_pressure_sensitivity` to the universal high performance settings.
+> - Changed `lock_refresh_rate` — added dynamic detection of any additional `refresh_rate` settings key exposed via `dumpsys content`, catching OEM-specific keys not already covered by the hardcoded list.
+> - Changed `preload_apps` — fixed `job_count` not persisting across subshell boundary in `while read`; replaced with tmpfile-based counter in `/data/local/tmp`; `mktemp` path also fixed for `compile_dex`.
+> - Changed `preload_apps` — now targets only the top 20 most frequently opened apps (ranked via `usagestats`), falling back to every installed app if usage history is unavailable, instead of preloading every installed app unconditionally; also now preloads each app's compiled `.odex`/`.vdex` files alongside its APK and native libraries, so apps already AOT-compiled by `compile_dex` launch straight from RAM.
+> - Changed `game_boost_daemon` — added 12-hour idle shutdown; timer resets on every game/idle transition so the daemon only stops after 12 hours with no activity, not from a fixed runtime since boot.
+> - Changed `device_info` in `customize.sh` — added `device_capitalized` to local declaration; refactored RAM label logic into a reusable `ram_label()` function; added SDK format validation before minimum version check; sub-comments renumbered 3a–3f.
+> - Changed `verify_module_id` in `verify.sh` — added `module_author` and `original_author` check alongside existing id and name verification.
+> - Changed `detect_root_all` in `customize.sh` — simplified `KSUD_OUTPUT` spoofed case from 5 conditions to 3, removing separate VortexSU/ReSukiSU labels in favor of a generic "KernelSU Spoofed" fallback.
+> - Changed `print_random_devil_message` in `customize.sh` — replaced Lucius with Baal in the list of devil names shown during installation.
+> - Fixed `zram_optimize` — swapoff/mkswap/swapon used `/dev/$dev_name` which doesn't exist on this device; corrected to `/dev/block/$dev_name` with fallback to `/dev/$dev_name` for devices with a different layout.
+> - Fixed `memory_daemon` — `cmd activity compact background` is not a valid subcommand and always failed silently; replaced with `cmd activity compact system`. LOW threshold trim now skips the foreground app (`send-trim-memory COMPLETE` throws for foreground processes). Sub-comments renumbered 2a–2i.
+> - Fixed `wm_logging_off` — `cmd window logging stop` is deprecated on newer Android versions and always failed; replaced with `cmd protolog_configuration logcat disable`. Removed dead `dumpsys window | grep Proto/Logcat` loop that matched nothing on tested devices.
+> - Fixed `storage_trim` — `fstrim` was attempted on read-only partitions (`/`, `/vendor`) and always failed with `FITRIM: Inappropriate ioctl for device`; added an `rw` mount check before trimming each partition.
+> - Fixed `configure_renderer` — forcing `debug.hwui.renderer`/`debug.renderengine.backend` to Skia Vulkan (`skiavk`) caused severe video playback corruption (horizontal artifacting) in apps like Facebook; now explicitly forces Skia OpenGL (`skiagl`) instead, confirmed stable across all tested content.
+> - Fixed `apply_driver_settings` — ANGLE step was gated behind `if settings get angle_gl_driver_selection_pkgs`, which is always true (returns `null` with exit 0 for unset keys, not a failure); replaced with a meaningful `-n "$packages"` check.
+> - Fixed `preload_apps` — native library preload never worked because it looked up `lib/$abi` (e.g. `lib/arm64-v8a`), but Android's actual APK lib folder naming is shortened (e.g. `lib/arm64`); added an abi-to-folder-name mapping before the lookup.
+> - Fixed `game_mode` — `inject-temperature` used the wrong argument order and passed the sensor name as the type, which always failed with "Invalid temperature type"; corrected to `TYPE STATUS NAME VALUE` with type mapped from each sensor's actual `mType` (CPU/GPU/BATTERY/SKIN).
+> - Fixed `disable_tracing` — `cmd activity clear-watch-heap` was called with no argument and always failed; now passes an empty string. Removed `cmd companiondevice clear-association-memory-cache`, which is not a recognized command on tested Android versions.
+> - Fixed `compile_dex` — compilation never worked at all: `run_compile` was a shell function defined in the parent process and called from an `xargs ... sh -c` subshell, which cannot see it in POSIX sh (`export -f` is unsupported), always failing with "inaccessible or not found". Rebuilt without the function/template indirection — each `sh -c` subshell now builds and runs its own compile command directly.
+> - Fixed `system_cleanup` — `inject-temperature` had the same wrong argument order bug as `game_mode`; applied the same fix (type mapped from `mType`, correct `TYPE STATUS NAME VALUE` order).
+> - Fixed `main` — `tune_activity_manager` was called before `system_cleanup`, but `system_cleanup` deletes every `*_constants` setting (including `activity_manager_constants` and `app_ops_constants`) without restoring them, silently wiping out all of `tune_activity_manager`'s settings on every run. Swapped the call order so `system_cleanup` runs first.
+> - Fixed `system_cleanup` — UID parsing from `pm list packages -U` used `cut -f3 -d:`, which only worked by coincidence on package names without extra colons; replaced with `grep -oE 'uid:[0-9]+'` for reliable extraction.
+> - Fixed `gms_optimize` — the `grep "gms"` package filter had no exclusion, so it matched and force-stopped, killed, and hibernated `com.google.android.gms` itself (core Google Play Services), risking broken push notifications, sign-in, and Play Store. Added an explicit exclude for `com.google.android.gms` and `com.google.android.gsf`, matching the whitelist already used in `restrict_gapps`.
+> - Fixed `uninstall.sh` — synced the ZRAM revert and `fstrim` logic with the fixes applied to `optimize`: ZRAM path now resolves `/dev/block/$dev_name` with fallback, and `fstrim` no longer targets read-only partitions (`/`, `/vendor`, `/odm`, `/system_ext`, `/product`), replaced with the same `rw`-checked partition list plus SD card detection.
+> - Removed `cmd otadexopt cleanup` from `system_cleanup` — the `otadexopt` service no longer exists on tested Android versions.
+> - Removed VortexSU, Kokoro Mask, and FolkLite from `detect_root_all` in `customize.sh`.
+---
+
 > [9.0.0]
 >
 > - Added revert logic to `uninstall.sh` — resets `settings`, `appops`, `device_config`, standby bucket, game mode, ZRAM, and GMS components changed by `optimize`.
@@ -10,8 +51,7 @@
 > - Changed `zram_optimize` — now loops all `/sys/block/zram*` devices instead of only `zram0`.
 > - Changed `memory_daemon` — MODERATE threshold no longer trims all third-party apps, reduced to `compact background` only.
 > - Changed `configure_renderer` — added fallback Vulkan detection via `libvulkan` in `/vendor/lib*` and `/system/lib*`.
-> - Changed `preload_apps` — added `wait` every 10 packages to limit parallel process spawning.
-> - Changed `compile_dex` — replaced process substitution `<(...)` with `mktemp` for POSIX sh compatibility; replaced unbounded `&` loop with `xargs -P 4` for controlled parallelism; added storage check — skips if `/data` has less than 1GB free.
+> - Changed `compile_dex` — replaced process substitution `<(...)` with `mktemp` in `/data/local/tmp` for POSIX sh compatibility; replaced unbounded `&` loop with `xargs -P 4` for controlled parallelism; added storage check — skips if `/data` has less than 1GB free.
 > - Changed `game_boost_daemon` — `is_game_foreground` now uses `dumpsys window | grep mCurrentFocus` instead of `dumpsys activity top` for lighter foreground detection.
 > - Changed `storage_trim` — added `/`, `/vendor`, `/mnt/vendor/persist`, and SD card detection via `/mnt/media_rw/*`.
 > - Changed `detect_root_all` in `customize.sh` — refactored from if-elif chain to loop-based detection; added aapt-based spoofed build fallback; changed detection order to APatch → KernelSU → Magisk.
